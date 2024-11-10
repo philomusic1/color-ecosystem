@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title> A Fun Color Ecosystem Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #111;
+      font-family: sans-serif;
+      color: white;
+    }
+    .toolbar {
+      position: fixed;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 100;
+    }
+    .tool {
+      width: 40px;
+      height: 40px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    .tool:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .tool.active {
+      border-color: white;
+      background: rgba(255,255,255,0.2);
+    }
+    .stats {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 100;
+    }
+    .tooltip {
+      position: fixed;
+      background: rgba(0,0,0,0.8);
+      padding: 5px 10px;
+      border-radius: 4px;
+      pointer-events: none;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div class="toolbar">
+    <div class="tool active" data-tool="attract" title="Attract Tool">🌟</div>
+    <div class="tool" data-tool="repel" title="Repel Tool">💨</div>
+    <div class="tool" data-tool="draw" title="Draw Barrier">✏️</div>
+    <div class="tool" data-tool="erase" title="Erase">🧹</div>
+    <div class="tool" data-tool="red" title="Add Red">🔴</div>
+    <div class="tool" data-tool="blue" title="Add Blue">🔵</div>
+    <div class="tool" data-tool="yellow" title="Add Yellow">💛</div>
+    <div class="tool" data-tool="portal" title="Create Portal">🌀</div>
+  </div>
+  <div class="stats">
+    Particles: <span id="particleCount">0</span><br>
+    Mixed Colors: <span id="mixedCount">0</span>
+  </div>
+  <div class="tooltip" style="display: none;"></div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Full screen canvas
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Game state
+    let particles = [];
+    let barriers = [];
+    let portals = [];
+    let currentTool = 'attract';
+    let isDrawing = false;
+    let mouseX = 0;
+    let mouseY = 0;
+    let lastX = 0;
+    let lastY = 0;
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.vx = (Math.random() - 0.5) * 4;
+        this.vy = (Math.random() - 0.5) * 4;
+        this.size = 6;
+        this.mass = 1;
+        this.energy = 1;
+        this.merging = false;
+      }
+
+      update() {
+        // Apply mouse interaction
+        if (mouseX && mouseY) {
+          const dx = mouseX - this.x;
+          const dy = mouseY - this.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const force = 150 / (dist * dist);
+
+          if (dist < 200) {
+            if (currentTool === 'attract') {
+              this.vx += (dx / dist) * force;
+              this.vy += (dy / dist) * force;
+            } else if (currentTool === 'repel') {
+              this.vx -= (dx / dist) * force * 2;
+              this.vy -= (dy / dist) * force * 2;
+            }
+          }
+        }
+
+        // Apply velocity with damping
+        this.vx *= 0.99;
+        this.vy *= 0.99;
+        
+        // Update position
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Handle barrier collisions
+        barriers.forEach(barrier => {
+          const dx = this.x - barrier.x;
+          const dy = this.y - barrier.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < barrier.size + this.size) {
+            const angle = Math.atan2(dy, dx);
+            const targetX = barrier.x + Math.cos(angle) * (barrier.size + this.size);
+            const targetY = barrier.y + Math.sin(angle) * (barrier.size + this.size);
+            
+            this.x = targetX;
+            this.y = targetY;
+            
+            // Bounce
+            const normalX = dx / distance;
+            const normalY = dy / distance;
+            const relativeVel = this.vx * normalX + this.vy * normalY;
+            this.vx -= 2 * relativeVel * normalX;
+            this.vy -= 2 * relativeVel * normalY;
+          }
+        });
+
+        // Handle portal teleportation
+        portals.forEach((portal, i) => {
+          const dx = this.x - portal.x;
+          const dy = this.y - portal.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < portal.size + this.size) {
+            // Find exit portal
+            const exitPortal = portals[(i + 1) % portals.length];
+            if (exitPortal) {
+              this.x = exitPortal.x + (Math.random() - 0.5) * 20;
+              this.y = exitPortal.y + (Math.random() - 0.5) * 20;
+              this.energy *= 0.9; // Lose some energy through portal
+            }
+          }
+        });
+
+        // Bounce off walls
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        
+        // Keep in bounds
+        this.x = Math.max(0, Math.min(canvas.width, this.x));
+        this.y = Math.max(0, Math.min(canvas.height, this.y));
+
+        // Color mixing
+        particles.forEach(other => {
+          if (other !== this && !this.merging && !other.merging) {
+            const dx = other.x - this.x;
+            const dy = other.y - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < this.size + other.size) {
+              this.handleCollision(other);
+            }
+          }
+        });
+      }
+
+      handleCollision(other) {
+        const mixRules = {
+          'red+blue': 'purple',
+          'blue+red': 'purple',
+          'red+yellow': 'orange',
+          'yellow+red': 'orange',
+          'blue+yellow': 'green',
+          'yellow+blue': 'green'
+        };
+
+        const mix = mixRules[`${this.color}+${other.color}`];
+        if (mix && Math.random() < 0.1) {
+          this.merging = true;
+          other.merging = true;
+          
+          setTimeout(() => {
+            this.color = mix;
+            this.size += 2;
+            this.energy = Math.min(this.energy + other.energy, 2);
+            particles = particles.filter(p => p !== other);
+            this.merging = false;
+          }, 500);
+        }
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        
+        const gradient = ctx.createRadialGradient(
+          this.x, this.y, 0,
+          this.x, this.y, this.size * 2
+        );
+        
+        if (this.merging) {
+          gradient.addColorStop(0, 'white');
+          gradient.addColorStop(0.5, this.color);
+        } else {
+          gradient.addColorStop(0, this.color);
+          gradient.addColorStop(0.5, this.color);
+        }
+        gradient.addColorStop(1, 'transparent');
+        
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // Draw energy field
+        if (this.energy > 1) {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255,255,255,${(this.energy - 1) * 0.2})`;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Mouse handling
+    canvas.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+
+      if (isDrawing) {
+        if (currentTool === 'draw') {
+          barriers.push({
+            x: mouseX,
+            y: mouseY,
+            size: 5
+          });
+        } else if (currentTool === 'erase') {
+          barriers = barriers.filter(b => {
+            const dx = b.x - mouseX;
+            const dy = b.y - mouseY;
+            return Math.sqrt(dx * dx + dy * dy) > 20;
+          });
+        }
+      }
+
+      // Update tooltip
+      const tooltip = document.querySelector('.tooltip');
+      tooltip.style.left = (mouseX + 15) + 'px';
+      tooltip.style.top = (mouseY + 15) + 'px';
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+
+      if (['red', 'blue', 'yellow'].includes(currentTool)) {
+        particles.push(new Particle(mouseX, mouseY, currentTool));
+      } else if (currentTool === 'portal' && portals.length < 2) {
+        portals.push({
+          x: mouseX,
+          y: mouseY,
+          size: 15
+        });
+      }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      isDrawing = false;
+    });
+
+    // Tool selection
+    document.querySelectorAll('.tool').forEach(tool => {
+      tool.addEventListener('click', () => {
+        document.querySelector('.tool.active').classList.remove('active');
+        tool.classList.add('active');
+        currentTool = tool.dataset.tool;
+      });
+
+      // Tooltip handling
+      tool.addEventListener('mouseover', (e) => {
+        const tooltip = document.querySelector('.tooltip');
+        tooltip.textContent = tool.title;
+        tooltip.style.display = 'block';
+      });
+
+      tool.addEventListener('mouseout', () => {
+        document.querySelector('.tooltip').style.display = 'none';
+      });
+    });
+
+    function updateStats() {
+      document.getElementById('particleCount').textContent = particles.length;
+      const mixedCount = particles.filter(p => 
+        ['purple', 'orange', 'green'].includes(p.color)
+      ).length;
+      document.getElementById('mixedCount').textContent = mixedCount;
+    }
+
+    function animate() {
+      ctx.fillStyle = 'rgba(17,17,17,0.1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw barriers
+      barriers.forEach(barrier => {
+        ctx.beginPath();
+        ctx.arc(barrier.x, barrier.y, barrier.size, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.fill();
+      });
+
+      // Draw portals
+      portals.forEach((portal, i) => {
+        ctx.beginPath();
+        ctx.arc(portal.x, portal.y, portal.size, 0, Math.PI * 2);
+        const gradient = ctx.createRadialGradient(
+          portal.x, portal.y, 0,
+          portal.x, portal.y, portal.size * 2
+        );
+        gradient.addColorStop(0, i === 0 ? 'blue' : 'orange');
+        gradient.addColorStop(1, 'transparent');
+        ctx.fillStyle = gradient;
+        ctx.fill();
+      });
+
+      // Draw current tool indicator
+      if (['attract', 'repel'].includes(currentTool) && mouseX && mouseY) {
+        ctx.beginPath();
+        ctx.arc(mouseX, mouseY, 100, 0, Math.PI * 2);
+        ctx.strokeStyle = currentTool === 'attract' ? 
+          'rgba(0,255,0,0.2)' : 'rgba(255,0,0,0.2)';
+        ctx.stroke();
+      }
+
+      particles.forEach(particle => {
+        particle.update();
+        particle.draw();
+      });
+
+      updateStats();
+      requestAnimationFrame(animate);
+    }
+
+    // Start with some particles
+    for (let i = 0; i < 20; i++) {
+      const colors = ['red', 'blue', 'yellow'];
+      particles.push(new Particle(
+        Math.random() * canvas.width,
+        Math.random() * canvas.height,
+        colors[Math.floor(Math.random() * colors.length)]
+      ));
+    }
+
+    animate();
+  </script>
+</body>
+</html>
