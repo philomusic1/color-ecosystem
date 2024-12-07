@@ -2,4 +2,4 @@ A Fun interactive Ecosystem game that can push your browser to its limits as you
 
 Feel Free to make a pull request to add more to it or optimise it more
 
-demo available at [philomusic1.github.io](https://philomusic1.github.io/)
+demo available at [[philomusic1.github.io](https://philomusic1.github.io/)](https://color-ecosystem.vercel.app/)
