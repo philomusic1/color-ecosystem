@@ -156,6 +156,23 @@
         this.x += this.vx;
         this.y += this.vy;
 
+        // Apply attraction or repulsion force
+        if (currentTool === 'attract' || currentTool === 'repel') {
+          const dx = mouseX - this.x;
+          const dy = mouseY - this.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const maxForce = 2; // Maximum force that can be applied
+          let force = maxForce / distance;
+
+          if (currentTool === 'repel') {
+            force = -force;
+          }
+
+          const angle = Math.atan2(dy, dx);
+          this.vx += Math.cos(angle) * force;
+          this.vy += Math.sin(angle) * force;
+        }
+
         // Collision with barriers
         this.checkBarrierCollision();
 
