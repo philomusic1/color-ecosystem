@@ -95,7 +95,6 @@
       'red-green': 'brown',
       'blue-purple': 'violet',
       'yellow-green': 'lime',
-      // Add more color combinations here as needed
     };
 
     // Particle class
@@ -117,31 +116,17 @@
       update() {
         if (this.frozen || isFrozen) return;
 
-        // Handle particle movement
         this.x += this.vx;
         this.y += this.vy;
 
-        // Collision with barriers
-        this.checkBarrierCollision();
-
-        // Wall bounce logic
         if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
         if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-
-        // Handle particle collisions
-        for (let i = 0; i < particles.length; i++) {
-          const p2 = particles[i];
-          if (p2 !== this && this.collidesWith(p2)) {
-            this.handleCollision(p2);
-          }
-        }
 
         // Particle Accelerator logic
         accelerators.forEach(accelerator => {
           const dx = this.x - accelerator.x;
           const dy = this.y - accelerator.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
-
           const dotProduct = (this.vx * dx + this.vy * dy);
           if (dotProduct < 0 && !this.accelerated) {
             this.accelerated = true;
@@ -172,20 +157,15 @@
       }
 
       handleCollision(other) {
-        // If same color, particles just move over each other (no bounce)
-        if (this.color === other.color) {
-          // Do nothing, particles just pass through each other
-        } else {
-          // If different color, mix the colors
-          const colorKey = this.color + '-' + other.color;
-          const reverseKey = other.color + '-' + this.color;
-          let newColor = colorMixingRules[colorKey] || colorMixingRules[reverseKey] || 'gray';
+        if (this.color === other.color) return;
 
-          // Remove the collided particles and create a new particle
-          particles = particles.filter(p => p !== this && p !== other);
-          const newParticle = new Particle((this.x + other.x) / 2, (this.y + other.y) / 2, newColor);
-          particles.push(newParticle);
-        }
+        const colorKey = this.color + '-' + other.color;
+        const reverseKey = other.color + '-' + this.color;
+        let newColor = colorMixingRules[colorKey] || colorMixingRules[reverseKey] || 'gray';
+
+        particles = particles.filter(p => p !== this && p !== other);
+        const newParticle = new Particle((this.x + other.x) / 2, (this.y + other.y) / 2, newColor);
+        particles.push(newParticle);
       }
 
       draw() {
@@ -193,6 +173,32 @@
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fillStyle = this.frozen || isFrozen ? 'lightblue' : this.color;
         ctx.fill();
+      }
+
+      isClicked(mx, my) {
+        const dx = mx - this.x;
+        const dy = my - this.y;
+        return Math.sqrt(dx * dx + dy * dy) < this.size;
+      }
+
+      split() {
+        const particle1 = new Particle(this.x, this.y, this.color);
+        const particle2 = new Particle(this.x, this.y, this.color);
+
+        // Reduce size and increase energy
+        particle1.size = this.size * 0.5;
+        particle2.size = this.size * 0.5;
+
+        const velocityAngle = Math.atan2(this.vy, this.vx);
+        const velocityMagnitude = Math.sqrt(this.vx * this.vx + this.vy * this.vy) * 1.5; // Increased energy
+
+        particle1.vx = velocityMagnitude * Math.cos(velocityAngle + Math.random() * 0.5 - 0.25);
+        particle1.vy = velocityMagnitude * Math.sin(velocityAngle + Math.random() * 0.5 - 0.25);
+
+        particle2.vx = velocityMagnitude * Math.cos(velocityAngle + Math.random() * 0.5 - 0.25);
+        particle2.vy = velocityMagnitude * Math.sin(velocityAngle + Math.random() * 0.5 - 0.25);
+
+        particles.push(particle1, particle2);
       }
 
       checkBarrierCollision() {
@@ -204,128 +210,82 @@
             const length = Math.sqrt(normal.x * normal.x + normal.y * normal.y);
             normal.x /= length;
             normal.y /= length;
-
-            const dot = this.vx * normal.x + this.vy * normal.y;
+            const dot = (this.vx * normal.x + this.vy * normal.y);
             this.vx -= 2 * dot * normal.x;
             this.vy -= 2 * dot * normal.y;
+            this.x = this.x + this.vx;
+            this.y = this.y + this.vy;
           }
         }
       }
 
       lineIntersectsCircle(p1, p2, cx, cy, radius) {
-        const a = p2.x - p1.x;
-        const b = p2.y - p1.y;
-        const c = p1.x - cx;
-        const d = p1.y - cy;
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        const fx = cx - p1.x;
+        const fy = cy - p1.y;
 
-        const dot = a * c + b * d;
-        const lengthSq = a * a + b * b;
-        const param = Math.min(Math.max(-dot / lengthSq, 0), 1);
+        const a = dx * dx + dy * dy;
+        const b = 2 * (fx * dx + fy * dy);
+        const c = fx * fx + fy * fy - radius * radius;
 
-        const closestX = p1.x + param * a;
-        const closestY = p1.y + param * b;
-
-        const distX = closestX - cx;
-        const distY = closestY - cy;
-        return distX * distX + distY * distY <= radius * radius;
+        const discriminant = b * b - 4 * a * c;
+        return discriminant >= 0;
       }
     }
 
-    function eraseNearbyBarriers(x, y, radius = 20) {
-      barriers = barriers.filter(point => {
-        const dx = point.x - x;
-        const dy = point.y - y;
-        return Math.sqrt(dx * dx + dy * dy) > radius;
-      });
-    }
+    // Handle toolbar tool selection
+    document.querySelector('.toolbar').addEventListener('click', (e) => {
+      const tool = e.target.getAttribute('data-tool');
+      if (!tool) return;
+      currentTool = tool;
 
-    function drawAccelerators() {
-      accelerators.forEach(accelerator => {
-        ctx.beginPath();
-        ctx.arc(accelerator.x, accelerator.y, 20, 0, Math.PI * 2);
-        ctx.fillStyle = 'cyan';
-        ctx.fill();
-      });
-    }
+      // Toggle active state
+      document.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
+      e.target.classList.add('active');
+    });
 
-    function clearParticles() {
-      particles = [];
-      document.getElementById('particleCount').innerText = particles.length;
-    }
+    // Add particle on click
+    canvas.addEventListener('click', (e) => {
+      const mx = e.clientX;
+      const my = e.clientY;
 
-    canvas.addEventListener('mousedown', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-      isDrawing = true;
-
-      if (currentTool === 'freeze') {
-        isFrozen = !isFrozen;  // Toggle freeze state
-      } else if (currentTool === 'erase') {
-        eraseNearbyBarriers(mouseX, mouseY);
-      } else if (currentTool === 'accelerator') {
-        accelerators.push({ x: mouseX, y: mouseY });
-      } else if (currentTool === 'red') {
-        particles.push(new Particle(mouseX, mouseY, 'red'));
+      if (currentTool === 'red') {
+        particles.push(new Particle(mx, my, 'red'));
       } else if (currentTool === 'blue') {
-        particles.push(new Particle(mouseX, mouseY, 'blue'));
+        particles.push(new Particle(mx, my, 'blue'));
       } else if (currentTool === 'yellow') {
-        particles.push(new Particle(mouseX, mouseY, 'yellow'));
-      } else if (currentTool === 'draw') {
-        barriers.push({ x: mouseX, y: mouseY });
-      } else if (currentTool === 'clear') {
-        clearParticles();
+        particles.push(new Particle(mx, my, 'yellow'));
       }
-    });
 
-    canvas.addEventListener('mousemove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-
-      if (isDrawing && currentTool === 'draw') {
-        barriers.push({ x: mouseX, y: mouseY });
-      } else if (isDrawing && currentTool === 'erase') {
-        eraseNearbyBarriers(mouseX, mouseY);
-      }
-    });
-
-    canvas.addEventListener('mouseup', () => {
-      isDrawing = false;
-    });
-
-    function drawBarriers() {
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      barriers.forEach((point, i) => {
-        if (i === 0) ctx.moveTo(point.x, point.y);
-        else ctx.lineTo(point.x, point.y);
+      // Only split particles when clicked, not automatically
+      particles.forEach(particle => {
+        if (particle.isClicked(mx, my)) {
+          particle.split();  // Split particle when clicked
+        }
       });
-      ctx.stroke();
-    }
+    });
 
+    // Clear particles
+    document.querySelector('[data-tool="clear"]').addEventListener('click', () => {
+      particles = [];
+    });
+
+    // Animation loop
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawBarriers();
-      drawAccelerators();
-      particles.forEach(p => {
-        p.update();
-        p.draw();
+
+      particles.forEach(particle => {
+        particle.update();
+        particle.draw();
       });
-      document.getElementById('particleCount').innerText = particles.length;
+
+      document.getElementById('particleCount').textContent = particles.length;
+
       requestAnimationFrame(animate);
     }
 
-    // Initial particles and game loop
     animate();
-
-    // Tool selection
-    document.querySelectorAll('.tool').forEach(tool => {
-      tool.addEventListener('click', () => {
-        document.querySelector('.tool.active')?.classList.remove('active');
-        tool.classList.add('active');
-        currentTool = tool.getAttribute('data-tool');
-      });
-    });
   </script>
 </body>
 </html>
