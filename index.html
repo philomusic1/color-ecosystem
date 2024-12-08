@@ -70,6 +70,7 @@
   </div>
   <div class="stats">
     Particles: <span id="particleCount">0</span>
+    Fastest Speed: <span id="fastestSpeed">0</span> m/s
   </div>
 
   <script>
@@ -86,6 +87,7 @@
     let mouseY = 0;
     let isDrawing = false;
     let isFrozen = false;
+    let fastestSpeed = 0;
 
     // Define color mixing rules
     const colorMixingRules = {
@@ -134,6 +136,13 @@
           if (p2 !== this && this.collidesWith(p2)) {
             this.handleCollision(p2);
           }
+        }
+
+        // Update the fastest speed
+        const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        if (currentSpeed > fastestSpeed) {
+          fastestSpeed = currentSpeed;
+          document.getElementById('fastestSpeed').innerText = fastestSpeed.toFixed(2);
         }
 
         // Particle Accelerator logic
