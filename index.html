@@ -35,7 +35,7 @@
     .modal-content {
       background: #222;
       padding: 20px;
-      border-radius: 40px; /* Rounded corners */
+      border-radius: 40px;
       text-align: center;
       max-width: 400px;
       width: 100%;
@@ -54,14 +54,49 @@
       color: white;
       font-size: 16px;
       border: none;
-      border-radius: 40px; /* Rounded corners for button */
+      border-radius: 40px;
       cursor: pointer;
     }
     .modal button:hover {
       background: #45a049;
     }
 
-    /* Toolbar and other game styles */
+    /* Sidebar for controls */
+    .sidebar {
+      position: fixed;
+      top: 10%;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+      padding: 20px;
+      border-radius: 40px;
+      z-index: 100;
+      width: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: 30%;
+      backdrop-filter: blur(10px); /* Apply blur effect */
+      -webkit-backdrop-filter: blur(10px); /* For Safari */
+    }
+
+    .color-controls {
+     display: flex;
+     flex-direction: column;
+     gap: 10px;
+     flex-grow: 1;
+    }
+
+    .color-controls label {
+     font-size: 14px;
+     color: white;
+    }
+
+    .color-controls input {
+       width: 100%;
+       height: 20px;
+    }
+
+    /* Toolbar */
     .toolbar {
       position: fixed;
       bottom: 30px;
@@ -91,6 +126,8 @@
       cursor: pointer;
       transition: all 0.3s ease;
       box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px); /* Apply blur effect */
+      -webkit-backdrop-filter: blur(10px); /* For Safari */
     }
     .tool:hover {
       background: rgba(255, 255, 255, 0.3);
@@ -104,6 +141,8 @@
       font-size: 24px;
       color: white;
     }
+
+    /* Stats display */
     .stats {
       position: fixed;
       top: 10px;
@@ -113,29 +152,6 @@
       border-radius: 8px;
       font-size: 14px;
       z-index: 100;
-    }
-
-    /* Background color controls */
-    .color-controls {
-      position: fixed;
-      bottom: 100px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.5);
-      padding: 20px;
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 300px;
-    }
-    .color-controls input {
-      width: 60px;
-      height: 20px;
-    }
-    .color-controls label {
-      color: white;
-      font-size: 14px;
     }
   </style>
 </head>
@@ -174,36 +190,34 @@
       <i>🧨</i>
     </div>
   </div>
+  
+  <!-- Sidebar for controls -->
+  <div class="sidebar">
+    <!-- Background color control -->
+    <div class="color-controls">
+      <label>R:</label>
+      <input type="range" id="redSlider" min="0" max="255" value="0">
+      <label>G:</label>
+      <input type="range" id="greenSlider" min="0" max="255" value="0">
+      <label>B:</label>
+      <input type="range" id="blueSlider" min="0" max="255" value="0">
+    </div>
 
+    <!-- Save & Load buttons -->
+    <div class="toolbar">
+      <div class="tool" id="saveState" title="Save State">
+        <i>💾 Save</i>
+      </div>
+      <div class="tool" id="loadState" title="Load State">
+        <i>📂 Load</i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Stats -->
   <div class="stats">
     Particles: <span id="particleCount">0</span><br>
     Fastest Speed: <span id="fastestSpeed">0</span> m/s
-  </div>
-
-  <!-- Color control section -->
-  <div class="color-controls">
-    <div>
-      <label>R:</label>
-      <input type="range" id="redSlider" min="0" max="255" value="17">
-    </div>
-    <div>
-      <label>G:</label>
-      <input type="range" id="greenSlider" min="0" max="255" value="17">
-    </div>
-    <div>
-      <label>B:</label>
-      <input type="range" id="blueSlider" min="0" max="255" value="17">
-    </div>
-  </div>
-
-  <!-- Save & Load buttons -->
-  <div class="toolbar">
-    <div class="tool" id="saveState" title="Save State">
-      <i>💾</i>
-    </div>
-    <div class="tool" id="loadState" title="Load State">
-      <i>📂</i>
-    </div>
   </div>
 
   <!-- Pop-up modal -->
@@ -234,7 +248,7 @@
     let isDrawing = false;
     let isFrozen = false;
     let fastestSpeed = 0;
-    let bgColor = { r: 17, g: 17, b: 17 }; // Default background color
+    let bgColor = { r: 0, g: 0, b: 0 };
 
     // Show the modal on page load
     window.onload = () => {
@@ -256,31 +270,45 @@
       'yellow-green': 'lime',
     };
 
+
     // Function to update the canvas background color based on RGB sliders
     function updateCanvasBackground() {
       canvas.style.backgroundColor = `rgb(${bgColor.r}, ${bgColor.g}, ${bgColor.b})`;
     }
 
+    // Fill the canvas with the initial background
+    function fillCanvasWithBackground() {
+      ctx.fillStyle = `rgb(${bgColor.r}, ${bgColor.g}, ${bgColor.b})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas with the background color
+    }
+
+    // Initialize canvas background color (black by default)
+    fillCanvasWithBackground();
+
     // Update background color on slider change
     document.getElementById('redSlider').addEventListener('input', (e) => {
       bgColor.r = e.target.value;
       updateCanvasBackground();
+      fillCanvasWithBackground();
     });
+
 
     document.getElementById('greenSlider').addEventListener('input', (e) => {
       bgColor.g = e.target.value;
       updateCanvasBackground();
+      fillCanvasWithBackground();
     });
 
     document.getElementById('blueSlider').addEventListener('input', (e) => {
       bgColor.b = e.target.value;
       updateCanvasBackground();
+      fillCanvasWithBackground();
     });
 
     // Save the current game state to localStorage
     function saveState() {
       const gameState = {
-        particles,
+        particles: particles.map(p => ({ x: p.x, y: p.y, color: p.color })),
         barriers,
         accelerators,
         bgColor
@@ -294,7 +322,7 @@
       const savedState = localStorage.getItem('gameState');
       if (savedState) {
         const { particles: savedParticles, barriers: savedBarriers, accelerators: savedAccelerators, bgColor: savedBgColor } = JSON.parse(savedState);
-        particles = savedParticles;
+        particles = savedParticles.map(p => new Particle(p.x, p.y, p.color));
         barriers = savedBarriers;
         accelerators = savedAccelerators;
         bgColor = savedBgColor;
