@@ -14,14 +14,13 @@
     }
     .toolbar {
       position: fixed;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
+      left: 50%;
+      bottom: 10px;
+      transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.8);
       padding: 10px;
       border-radius: 8px;
       display: flex;
-      flex-direction: column;
       gap: 8px;
       z-index: 100;
     }
@@ -67,6 +66,7 @@
     <div class="tool" data-tool="yellow" title="Add Yellow Particle">🟡</div>
     <div class="tool" data-tool="freeze" title="Freeze Particles">❄️</div>
     <div class="tool" data-tool="accelerator" title="Particle Accelerator">⚡</div>
+    <div class="tool" data-tool="clear" title="Clear All Particles">🧨</div>
   </div>
   <div class="stats">
     Particles: <span id="particleCount">0</span>
@@ -248,6 +248,11 @@
       });
     }
 
+    function clearParticles() {
+      particles = [];
+      document.getElementById('particleCount').innerText = particles.length;
+    }
+
     canvas.addEventListener('mousedown', (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
@@ -267,6 +272,8 @@
         particles.push(new Particle(mouseX, mouseY, 'yellow'));
       } else if (currentTool === 'draw') {
         barriers.push({ x: mouseX, y: mouseY });
+      } else if (currentTool === 'clear') {
+        clearParticles();
       }
     });
 
@@ -322,3 +329,4 @@
   </script>
 </body>
 </html>
+
