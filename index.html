@@ -8,17 +8,67 @@
     body {
       margin: 0;
       overflow: hidden;
-      background: #111;
       font-family: sans-serif;
       color: white;
     }
+
+    /* Modal styles */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      z-index: 200;
+    }
+    .modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-content {
+      background: #222;
+      padding: 20px;
+      border-radius: 40px; /* Rounded corners */
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+    .modal h2 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    .modal p {
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    .modal button {
+      padding: 10px 20px;
+      background: #4CAF50;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 40px; /* Rounded corners for button */
+      cursor: pointer;
+    }
+    .modal button:hover {
+      background: #45a049;
+    }
+
+    /* Toolbar and other game styles */
     .toolbar {
       position: fixed;
       bottom: 30px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-      border-radius: 40px; /* More rounded corners */
+      border-radius: 40px; /* Rounded corners */
       display: flex;
       gap: 16px;
       padding: 12px 20px;
@@ -64,11 +114,35 @@
       font-size: 14px;
       z-index: 100;
     }
+
+    /* Background color controls */
+    .color-controls {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      padding: 20px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 300px;
+    }
+    .color-controls input {
+      width: 60px;
+      height: 20px;
+    }
+    .color-controls label {
+      color: white;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
   <div class="toolbar">
+    <!-- Toolbar buttons go here -->
     <div class="tool active" data-tool="attract" title="Attract Tool">
       <i>🌟</i>
     </div>
@@ -106,6 +180,45 @@
     Fastest Speed: <span id="fastestSpeed">0</span> m/s
   </div>
 
+  <!-- Color control section -->
+  <div class="color-controls">
+    <div>
+      <label>R:</label>
+      <input type="range" id="redSlider" min="0" max="255" value="17">
+    </div>
+    <div>
+      <label>G:</label>
+      <input type="range" id="greenSlider" min="0" max="255" value="17">
+    </div>
+    <div>
+      <label>B:</label>
+      <input type="range" id="blueSlider" min="0" max="255" value="17">
+    </div>
+  </div>
+
+  <!-- Save & Load buttons -->
+  <div class="toolbar">
+    <div class="tool" id="saveState" title="Save State">
+      <i>💾</i>
+    </div>
+    <div class="tool" id="loadState" title="Load State">
+      <i>📂</i>
+    </div>
+  </div>
+
+  <!-- Pop-up modal -->
+  <div class="modal" id="introModal">
+    <div class="modal-content">
+      <h2>Welcome to the Color Ecosystem Sandbox!</h2>
+      <p>
+        In this game, you'll interact with particles of different colors.
+        Use various tools to attract, repel, and create barriers!
+        Your goal is to have fun and explore the particle interactions.
+      </p>
+      <button id="closeModal">OK</button>
+    </div>
+  </div>
+
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
@@ -121,6 +234,17 @@
     let isDrawing = false;
     let isFrozen = false;
     let fastestSpeed = 0;
+    let bgColor = { r: 17, g: 17, b: 17 }; // Default background color
+
+    // Show the modal on page load
+    window.onload = () => {
+      document.getElementById('introModal').classList.add('active');
+    };
+
+    // Close the modal when the 'OK' button is clicked
+    document.getElementById('closeModal').addEventListener('click', () => {
+      document.getElementById('introModal').classList.remove('active');
+    });
 
     // Define color mixing rules
     const colorMixingRules = {
@@ -130,8 +254,60 @@
       'red-green': 'brown',
       'blue-purple': 'violet',
       'yellow-green': 'lime',
-      // Add more color combinations here as needed
     };
+
+    // Function to update the canvas background color based on RGB sliders
+    function updateCanvasBackground() {
+      canvas.style.backgroundColor = `rgb(${bgColor.r}, ${bgColor.g}, ${bgColor.b})`;
+    }
+
+    // Update background color on slider change
+    document.getElementById('redSlider').addEventListener('input', (e) => {
+      bgColor.r = e.target.value;
+      updateCanvasBackground();
+    });
+
+    document.getElementById('greenSlider').addEventListener('input', (e) => {
+      bgColor.g = e.target.value;
+      updateCanvasBackground();
+    });
+
+    document.getElementById('blueSlider').addEventListener('input', (e) => {
+      bgColor.b = e.target.value;
+      updateCanvasBackground();
+    });
+
+    // Save the current game state to localStorage
+    function saveState() {
+      const gameState = {
+        particles,
+        barriers,
+        accelerators,
+        bgColor
+      };
+      localStorage.setItem('gameState', JSON.stringify(gameState));
+      alert('Game state saved!');
+    }
+
+    // Load the saved game state from localStorage
+    function loadState() {
+      const savedState = localStorage.getItem('gameState');
+      if (savedState) {
+        const { particles: savedParticles, barriers: savedBarriers, accelerators: savedAccelerators, bgColor: savedBgColor } = JSON.parse(savedState);
+        particles = savedParticles;
+        barriers = savedBarriers;
+        accelerators = savedAccelerators;
+        bgColor = savedBgColor;
+        updateCanvasBackground();
+        alert('Game state loaded!');
+      } else {
+        alert('No saved state found!');
+      }
+    }
+
+    // Event listeners for save/load buttons
+    document.getElementById('saveState').addEventListener('click', saveState);
+    document.getElementById('loadState').addEventListener('click', loadState);
 
     // Particle class
     class Particle {
