@@ -14,33 +14,45 @@
     }
     .toolbar {
       position: fixed;
+      bottom: 30px;
       left: 50%;
-      bottom: 10px;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
-      padding: 10px;
-      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+      border-radius: 40px; /* More rounded corners */
       display: flex;
-      gap: 8px;
+      gap: 16px;
+      padding: 12px 20px;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.6);
       z-index: 100;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.3s ease-in-out;
+      backdrop-filter: blur(10px); /* Apply blur effect */
+      -webkit-backdrop-filter: blur(10px); /* For Safari */
     }
     .tool {
-      width: 40px;
-      height: 40px;
-      border: 2px solid rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
-      cursor: pointer;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.3s;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.4);
     }
     .tool:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
     }
     .tool.active {
-      border-color: white;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.4);
+      transform: scale(1.1);
+    }
+    .tool i {
+      font-size: 24px;
+      color: white;
     }
     .stats {
       position: fixed;
@@ -57,19 +69,40 @@
 <body>
   <canvas id="canvas"></canvas>
   <div class="toolbar">
-    <div class="tool active" data-tool="attract" title="Attract Tool">🌟</div>
-    <div class="tool" data-tool="repel" title="Repel Tool">💨</div>
-    <div class="tool" data-tool="draw" title="Draw Barrier">✏️</div>
-    <div class="tool" data-tool="erase" title="Erase Barrier">🧹</div>
-    <div class="tool" data-tool="red" title="Add Red Particle">🔴</div>
-    <div class="tool" data-tool="blue" title="Add Blue Particle">🔵</div>
-    <div class="tool" data-tool="yellow" title="Add Yellow Particle">🟡</div>
-    <div class="tool" data-tool="freeze" title="Freeze Particles">❄️</div>
-    <div class="tool" data-tool="accelerator" title="Particle Accelerator">⚡</div>
-    <div class="tool" data-tool="clear" title="Clear All Particles">🧨</div>
+    <div class="tool active" data-tool="attract" title="Attract Tool">
+      <i>🌟</i>
+    </div>
+    <div class="tool" data-tool="repel" title="Repel Tool">
+      <i>💨</i>
+    </div>
+    <div class="tool" data-tool="draw" title="Draw Barrier">
+      <i>✏️</i>
+    </div>
+    <div class="tool" data-tool="erase" title="Erase Barrier">
+      <i>🧹</i>
+    </div>
+    <div class="tool" data-tool="red" title="Add Red Particle">
+      <i>🔴</i>
+    </div>
+    <div class="tool" data-tool="blue" title="Add Blue Particle">
+      <i>🔵</i>
+    </div>
+    <div class="tool" data-tool="yellow" title="Add Yellow Particle">
+      <i>🟡</i>
+    </div>
+    <div class="tool" data-tool="freeze" title="Freeze Particles">
+      <i>❄️</i>
+    </div>
+    <div class="tool" data-tool="accelerator" title="Particle Accelerator">
+      <i>⚡</i>
+    </div>
+    <div class="tool" data-tool="clear" title="Clear All Particles">
+      <i>🧨</i>
+    </div>
   </div>
+
   <div class="stats">
-    Particles: <span id="particleCount">0</span>
+    Particles: <span id="particleCount">0</span><br>
     Fastest Speed: <span id="fastestSpeed">0</span> m/s
   </div>
 
