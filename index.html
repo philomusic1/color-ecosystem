@@ -189,6 +189,9 @@
     <div class="tool" data-tool="clear" title="Clear All Particles">
       <i>🧨</i>
     </div>
+    <div class="tool" data-tool="randomSpawn" title="Random Particle Spawn">
+      <i>🔄</i>
+    </div>
   </div>
   
   <!-- Sidebar for controls -->
@@ -592,6 +595,36 @@
         tool.classList.add('active');
         currentTool = tool.getAttribute('data-tool');
       });
+    });
+    
+    // Variable to control random particle spawn
+    let isRandomSpawnEnabled = false;
+    
+    // Function to spawn a random particle
+    function spawnRandomParticle() {
+      const colors = ['red', 'blue', 'yellow'];
+      const color =colors [Math.floor(Math.random() * colors.length)];
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      particles.push(new Particle(x, y, color));
+    }
+
+    // Interval to spawn paritcles randomly
+    let randomSpawnInterval;
+    function toggleRandomSpawn() {
+      if (isRandomSpawnEnabled) {
+        randomSpawnInterval = setInterval(spawnRandomParticle, 3000);
+      } else {
+        clearInterval(randomSpawnInterval);
+      }
+    }
+
+    // Add event listener for new button
+    document.querySelector('[data-tool="randomSpawn"]').addEventListener('click', () => {
+      isRandomSpawnEnabled = !isRandomSpawnEnabled;
+      document.querySelector('.tool.active')?.classList.remove('active');
+      document.querySelector('[data-tool="randomSpawn"]').classList.add('active');
+      toggleRandomSpawn();
     });
   </script>
 </body>
