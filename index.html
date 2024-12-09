@@ -206,12 +206,6 @@
       <input type="range" id="blueSlider" min="0" max="255" value="0">
     </div>
 
-    <!-- Particle Speed Control -->
-     <div class="color-controls">
-      <label>Speed:</label>
-      <input type="range" id="speedSlider" min="1" max="10" value="5">
-     </div>
-
     <!-- Save & Load buttons -->
     <div class="toolbar">
       <div class="tool" id="saveState" title="Save State">
@@ -258,17 +252,11 @@
     let isFrozen = false;
     let fastestSpeed = 0;
     let bgColor = { r: 0, g: 0, b: 0 };
-    let particleSpeedMultiplier = 1; 
 
     // Show the modal on page load
     window.onload = () => {
       document.getElementById('introModal').classList.add('active');
     };
-
-    // update particle speed when the slider is changed
-    document.getElementById('speedSlider').addEventListener('input', (e) => {
-      particleSpeedMultiplier = e.target.value;
-    });
 
     // Close the modal when the 'OK' button is clicked
     document.getElementById('closeModal').addEventListener('click', () => {
@@ -364,19 +352,12 @@
         this.frozen = false;
         this.accelerated = false;
         this.normalSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        this.accelerationFactor = 0.04;
+        this.accelerationFactor = 5.00;
         this.decelerationFactor = 0.02;
       }
 
       update() {
         if (this.frozen || isFrozen) return;
-
-        // Apply particle speed multiplier
-        const speedFactor = particleSpeedMultiplier;
-
-        //Adjust velocity based on speed multiplier
-        this.vx *= speedFactor;
-        this.vy *= speedFactor;
 
         // Handle particle movement
         this.x += this.vx;
