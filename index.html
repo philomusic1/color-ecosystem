@@ -359,9 +359,20 @@
       update() {
         if (this.frozen || isFrozen) return;
 
-        // Handle particle movement
-        this.x += this.vx;
-        this.y += this.vy;
+        const stepSize = Math.max(Math.abs(this.vx), Math.abs(this.vy)); // Calculate a reasonable step size based on the velocity
+
+        // Move the particle in smaller steps to prevent it from skipping over barriers
+        for (let step = 0; step < stepSize; step++) {
+          const prevX = this.x;
+          const prevY = this.y;
+
+          this.x += this.vx / stepSize;
+          this.y += this.vy / stepSize;
+
+          // Check for barrier collision on each small step
+          this.checkBarrierCollision();
+        }
+
 
         // Apply attraction or repulsion force
         if (currentTool === 'attract' || currentTool === 'repel') {
@@ -379,9 +390,6 @@
           this.vx += Math.cos(angle) * force;
           this.vy += Math.sin(angle) * force;
         }
-
-        // Collision with barriers
-        this.checkBarrierCollision();
 
         // Wall bounce logic
         if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
@@ -466,21 +474,47 @@
       }
 
       checkBarrierCollision() {
-        for (let i = 0; i < barriers.length - 1; i++) {
-          const p1 = barriers[i];
-          const p2 = barriers[i + 1];
-          if (this.lineIntersectsCircle(p1, p2, this.x, this.y, this.size)) {
+    // Loop through all barriers
+    for (let i = 0; i < barriers.length - 1; i++) {
+        const p1 = barriers[i];
+        const p2 = barriers[i + 1];
+
+        // Check if particle intersects with barrier line segment
+        if (this.lineIntersectsCircle(p1, p2, this.x, this.y, this.size)) {
+            // Calculate normal vector of the barrier (perpendicular to the line segment)
             const normal = { x: p2.y - p1.y, y: p1.x - p2.x };
             const length = Math.sqrt(normal.x * normal.x + normal.y * normal.y);
-            normal.x /= length;
+            normal.x /= length; // Normalize the normal vector
             normal.y /= length;
 
+            // Calculate dot product (how much the particle is moving towards the barrier)
             const dot = this.vx * normal.x + this.vy * normal.y;
+
+            // Reflect the particle's velocity off the barrier
             this.vx -= 2 * dot * normal.x;
             this.vy -= 2 * dot * normal.y;
-          }
+
+            // Ensure the particle doesn't get stuck inside the barrier
+            const overlap = this.size - this.distanceToLine(p1, p2);
+            if (overlap > 0) {
+                this.x += normal.x * overlap;
+                this.y += normal.y * overlap;
+            }
         }
-      }
+    }
+}
+
+// Function to calculate the perpendicular distance from a point to a line segment
+distanceToLine(p1, p2) {
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    const lengthSquared = dx * dx + dy * dy;
+    const t = Math.max(0, Math.min(1, ((this.x - p1.x) * dx + (this.y - p1.y) * dy) / lengthSquared));
+    const nearestX = p1.x + t * dx;
+    const nearestY = p1.y + t * dy;
+    return Math.sqrt((this.x - nearestX) * (this.x - nearestX) + (this.y - nearestY) * (this.y - nearestY));
+}
+
 
       lineIntersectsCircle(p1, p2, cx, cy, radius) {
         const a = p2.x - p1.x;
