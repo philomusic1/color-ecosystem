@@ -504,17 +504,39 @@
     }
 }
 
-// Function to calculate the perpendicular distance from a point to a line segment
-distanceToLine(p1, p2) {
-    const dx = p2.x - p1.x;
-    const dy = p2.y - p1.y;
-    const lengthSquared = dx * dx + dy * dy;
-    const t = Math.max(0, Math.min(1, ((this.x - p1.x) * dx + (this.y - p1.y) * dy) / lengthSquared));
-    const nearestX = p1.x + t * dx;
-    const nearestY = p1.y + t * dy;
-    return Math.sqrt((this.x - nearestX) * (this.x - nearestX) + (this.y - nearestY) * (this.y - nearestY));
+// Function to erase the barrier line near the click
+function eraseNearbyBarriers(x, y, radius = 20) {
+  barriers = barriers.filter((point, index) => {
+    // Get the next point in the barrier (circular connection for the last one)
+    const nextPoint = barriers[(index + 1) % barriers.length];
+
+    // Calculate the distance from the mouse to the line segment
+    const distance = distanceToLine(point, nextPoint, x, y);
+
+    // If the distance is smaller than the radius, delete the line segment
+    return distance > radius;
+  });
 }
 
+// Function to calculate the perpendicular distance from a point to a line segment
+function distanceToLine(p1, p2, cx, cy) {
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+  const lengthSquared = dx * dx + dy * dy;
+  
+  if (lengthSquared === 0) return Math.sqrt((cx - p1.x) ** 2 + (cy - p1.y) ** 2); // Avoid division by zero
+
+  // Compute the projection of the point onto the line segment
+  const t = Math.max(0, Math.min(1, ((cx - p1.x) * dx + (cy - p1.y) * dy) / lengthSquared));
+  const nearestX = p1.x + t * dx;
+  const nearestY = p1.y + t * dy;
+
+  // Calculate the distance from the point to the nearest point on the line
+  const distX = cx - nearestX;
+  const distY = cy - nearestY;
+  
+  return Math.sqrt(distX * distX + distY * distY);
+}
 
       lineIntersectsCircle(p1, p2, cx, cy, radius) {
         const a = p2.x - p1.x;
@@ -535,14 +557,6 @@ distanceToLine(p1, p2) {
       }
     }
 
-    function eraseNearbyBarriers(x, y, radius = 20) {
-      barriers = barriers.filter(point => {
-        const dx = point.x - x;
-        const dy = point.y - y;
-        return Math.sqrt(dx * dx + dy * dy) > radius;
-      });
-    }
-
     function drawAccelerators() {
       accelerators.forEach(accelerator => {
         ctx.beginPath();
@@ -558,43 +572,43 @@ distanceToLine(p1, p2) {
     }
 
     canvas.addEventListener('mousedown', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-      isDrawing = true;
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  isDrawing = true;
 
-      if (currentTool === 'freeze') {
-        isFrozen = !isFrozen;  // Toggle freeze state
-      } else if (currentTool === 'erase') {
-        eraseNearbyBarriers(mouseX, mouseY);
-      } else if (currentTool === 'accelerator') {
-        accelerators.push({ x: mouseX, y: mouseY });
-      } else if (currentTool === 'red') {
-        particles.push(new Particle(mouseX, mouseY, 'red'));
-      } else if (currentTool === 'blue') {
-        particles.push(new Particle(mouseX, mouseY, 'blue'));
-      } else if (currentTool === 'yellow') {
-        particles.push(new Particle(mouseX, mouseY, 'yellow'));
-      } else if (currentTool === 'draw') {
-        barriers.push({ x: mouseX, y: mouseY });
-      } else if (currentTool === 'clear') {
-        clearParticles();
-      }
-    });
+  if (currentTool === 'freeze') {
+    isFrozen = !isFrozen;  // Toggle freeze state
+  } else if (currentTool === 'erase') {
+    eraseNearbyBarriers(mouseX, mouseY); // Erase nearby barriers when clicking
+  } else if (currentTool === 'accelerator') {
+    accelerators.push({ x: mouseX, y: mouseY });
+  } else if (currentTool === 'red') {
+    particles.push(new Particle(mouseX, mouseY, 'red'));
+  } else if (currentTool === 'blue') {
+    particles.push(new Particle(mouseX, mouseY, 'blue'));
+  } else if (currentTool === 'yellow') {
+    particles.push(new Particle(mouseX, mouseY, 'yellow'));
+  } else if (currentTool === 'draw') {
+    barriers.push({ x: mouseX, y: mouseY });
+  } else if (currentTool === 'clear') {
+    clearParticles();
+  }
+});
 
-    canvas.addEventListener('mousemove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
+canvas.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
 
-      if (isDrawing && currentTool === 'draw') {
-        barriers.push({ x: mouseX, y: mouseY });
-      } else if (isDrawing && currentTool === 'erase') {
-        eraseNearbyBarriers(mouseX, mouseY);
-      }
-    });
+  if (isDrawing && currentTool === 'draw') {
+    barriers.push({ x: mouseX, y: mouseY });
+  } else if (isDrawing && currentTool === 'erase') {
+    eraseNearbyBarriers(mouseX, mouseY); // Erase while dragging
+  }
+});
 
-    canvas.addEventListener('mouseup', () => {
-      isDrawing = false;
-    });
+canvas.addEventListener('mouseup', () => {
+  isDrawing = false;
+});
 
     function drawBarriers() {
       ctx.strokeStyle = 'white';
