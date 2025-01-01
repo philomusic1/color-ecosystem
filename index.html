@@ -11,50 +11,6 @@
       font-family: sans-serif;
       color: white;
     }
-    
-    .toolbar {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 40px;
-      display: flex;
-      gap: 16px;
-      padding: 12px 20px;
-      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.6);
-      z-index: 100;
-      justify-content: center;
-      align-items: center;
-      transition: transform 0.3s ease-in-out;
-      backdrop-filter: blur(10px);
-    }
-
-    .tool {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .tool.disabled {
-      background: rgba(255, 255, 255, 0.2);
-      cursor: not-allowed;
-    }
-
-    .tool.active {
-      background: rgba(255, 255, 255, 0.4);
-    }
-
-    .tool i {
-      font-size: 24px;
-      color: white;
-    }
 
     /* Modal styles */
     .modal {
@@ -72,12 +28,10 @@
       transition: opacity 0.3s ease, visibility 0.3s ease;
       z-index: 200;
     }
-
     .modal.active {
       opacity: 1;
       visibility: visible;
     }
-
     .modal-content {
       background: #222;
       padding: 20px;
@@ -86,12 +40,125 @@
       max-width: 400px;
       width: 100%;
     }
+    .modal h2 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    .modal p {
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    .modal button {
+      padding: 10px 20px;
+      background: #4CAF50;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 40px;
+      cursor: pointer;
+    }
+    .modal button:hover {
+      background: #45a049;
+    }
+
+    /* Sidebar for controls */
+    .sidebar {
+      position: fixed;
+      top: 10%;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+      padding: 20px;
+      border-radius: 40px;
+      z-index: 100;
+      width: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: 30%;
+      backdrop-filter: blur(10px); /* Apply blur effect */
+      -webkit-backdrop-filter: blur(10px); /* For Safari */
+    }
+
+    .color-controls {
+     display: flex;
+     flex-direction: column;
+     gap: 10px;
+     flex-grow: 1;
+    }
+
+    .color-controls label {
+     font-size: 14px;
+     color: white;
+    }
+
+    .color-controls input {
+       width: 100%;
+       height: 20px;
+    }
+
+    /* Toolbar */
+    .toolbar {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+      border-radius: 40px; /* Rounded corners */
+      display: flex;
+      gap: 16px;
+      padding: 12px 20px;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.6);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.3s ease-in-out;
+      backdrop-filter: blur(10px); /* Apply blur effect */
+      -webkit-backdrop-filter: blur(10px); /* For Safari */
+    }
+    .tool {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px); /* Apply blur effect */
+      -webkit-backdrop-filter: blur(10px); /* For Safari */
+    }
+    .tool:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+    .tool.active {
+      background: rgba(255, 255, 255, 0.4);
+      transform: scale(1.1);
+    }
+    .tool i {
+      font-size: 24px;
+      color: white;
+    }
+
+    /* Stats display */
+    .stats {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 100;
+    }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
-
   <div class="toolbar">
+    <!-- Toolbar buttons go here -->
     <div class="tool active" data-tool="attract" title="Attract Tool">
       <i>🌟</i>
     </div>
@@ -116,27 +183,56 @@
     <div class="tool" data-tool="freeze" title="Freeze Particles">
       <i>❄️</i>
     </div>
-    <div class="tool" data-tool="clear" title="Clear All Particles">
-      <i>🧨</i>
-    </div>
-    <div class="tool" data-tool="chemistry" title="Toggle Chemistry Mode">
-      <i>⚗️</i>
-    </div>
-    
-    <!-- New tools for Particle Accelerator, Save, Background -->
     <div class="tool" data-tool="accelerator" title="Particle Accelerator">
       <i>⚡</i>
     </div>
-    <div class="tool" data-tool="save" title="Save Game">
-      <i>💾</i>
+    <div class="tool" data-tool="clear" title="Clear All Particles">
+      <i>🧨</i>
     </div>
-    <div class="tool" data-tool="background" title="Customize Background">
-      <i>🎨</i>
+    <div class="tool" data-tool="randomSpawn" title="Random Particle Spawn">
+      <i>🔄</i>
+    </div>
+  </div>
+  
+  <!-- Sidebar for controls -->
+  <div class="sidebar">
+    <!-- Background color control -->
+    <div class="color-controls">
+      <label>R:</label>
+      <input type="range" id="redSlider" min="0" max="255" value="0">
+      <label>G:</label>
+      <input type="range" id="greenSlider" min="0" max="255" value="0">
+      <label>B:</label>
+      <input type="range" id="blueSlider" min="0" max="255" value="0">
     </div>
 
-    <!-- New tool for toggling random particle spawning -->
-    <div class="tool" data-tool="random-spawn" title="Toggle Random Particle Spawning">
-      <i>🔄</i>
+    <!-- Save & Load buttons -->
+    <div class="toolbar">
+      <div class="tool" id="saveState" title="Save State">
+        <i>💾 Save</i>
+      </div>
+      <div class="tool" id="loadState" title="Load State">
+        <i>📂 Load</i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Stats -->
+  <div class="stats">
+    Particles: <span id="particleCount">0</span><br>
+    Fastest Speed: <span id="fastestSpeed">0</span> m/s
+  </div>
+
+  <!-- Pop-up modal -->
+  <div class="modal" id="introModal">
+    <div class="modal-content">
+      <h2>Welcome to the Color Ecosystem Sandbox!</h2>
+      <p>
+        In this game, you'll interact with particles of different colors.
+        Use various tools to attract, repel, and create barriers!
+        Your goal is to have fun and explore the particle interactions.
+      </p>
+      <button id="closeModal">OK</button>
     </div>
   </div>
 
@@ -148,165 +244,388 @@
 
     let particles = [];
     let barriers = [];
-    let isChemistryMode = false;
-    let isRandomSpawningEnabled = true;
+    let accelerators = [];
     let currentTool = 'attract';
+    let mouseX = 0;
+    let mouseY = 0;
+    let isDrawing = false;
+    let isFrozen = false;
+    let fastestSpeed = 0;
+    let bgColor = { r: 0, g: 0, b: 0 };
 
-    // Toggle Chemistry Mode
-    document.querySelector('[data-tool="chemistry"]').addEventListener('click', () => {
-      isChemistryMode = !isChemistryMode;
-      alert(isChemistryMode ? 'Chemistry Mode Activated!' : 'Sandbox Mode Activated!');
-      toggleNonChemistryTools(isChemistryMode);
-      toggleAdditionalTools(isChemistryMode);
-    });
-
-    // Toggle Random Particle Spawning
-    document.querySelector('[data-tool="random-spawn"]').addEventListener('click', () => {
-      isRandomSpawningEnabled = !isRandomSpawningEnabled;
-      alert(isRandomSpawningEnabled ? 'Random Particle Spawning Enabled' : 'Random Particle Spawning Disabled');
-    });
-
-    // Disable/Enable non-chemistry tools when Chemistry Mode is enabled or disabled
-    function toggleNonChemistryTools(enabled) {
-      const toolsToDisable = [
-        'attract', 'repel', 'draw', 'erase', 'freeze'
-      ];
-      toolsToDisable.forEach(tool => {
-        const toolElement = document.querySelector(`[data-tool="${tool}"]`);
-        if (enabled) {
-          toolElement.classList.add('disabled');
-          toolElement.style.pointerEvents = 'none'; // Disable clicks
-        } else {
-          toolElement.classList.remove('disabled');
-          toolElement.style.pointerEvents = 'auto'; // Re-enable clicks
-        }
-      });
-    }
-
-    // Disable/Enable the additional tools in Non-Chemistry Mode
-    function toggleAdditionalTools(enabled) {
-      const additionalTools = [
-        'accelerator', 'save', 'background'
-      ];
-      additionalTools.forEach(tool => {
-        const toolElement = document.querySelector(`[data-tool="${tool}"]`);
-        if (enabled) {
-          toolElement.classList.add('disabled');
-          toolElement.style.pointerEvents = 'none'; // Disable clicks
-        } else {
-          toolElement.classList.remove('disabled');
-          toolElement.style.pointerEvents = 'auto'; // Re-enable clicks
-        }
-      });
-    }
-
-    // Chemistry reactions: Real-life chemical reactions
-    const reactions = {
-      'red-blue': 'purple',
-      'blue-yellow': 'green',  // Updated: Blue + Yellow => Green
-      'red-yellow': 'orange',
-      'red-red': 'purple',
-      'blue-blue': 'blue',
+    // Show the modal on page load
+    window.onload = () => {
+      document.getElementById('introModal').classList.add('active');
     };
 
+    // Close the modal when the 'OK' button is clicked
+    document.getElementById('closeModal').addEventListener('click', () => {
+      document.getElementById('introModal').classList.remove('active');
+    });
+
+    // Define color mixing rules
+    const colorMixingRules = {
+      'red-blue': 'purple',
+      'blue-yellow': 'green',
+      'yellow-red': 'orange',
+      'red-green': 'brown',
+      'blue-purple': 'violet',
+      'yellow-green': 'lime',
+    };
+
+
+    // Function to update the canvas background color based on RGB sliders
+    function updateCanvasBackground() {
+      canvas.style.backgroundColor = `rgb(${bgColor.r}, ${bgColor.g}, ${bgColor.b})`;
+    }
+
+    // Fill the canvas with the initial background
+    function fillCanvasWithBackground() {
+      ctx.fillStyle = `rgb(${bgColor.r}, ${bgColor.g}, ${bgColor.b})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas with the background color
+    }
+
+    // Initialize canvas background color (black by default)
+    fillCanvasWithBackground();
+
+    // Update background color on slider change
+    document.getElementById('redSlider').addEventListener('input', (e) => {
+      bgColor.r = e.target.value;
+      updateCanvasBackground();
+      fillCanvasWithBackground();
+    });
+
+
+    document.getElementById('greenSlider').addEventListener('input', (e) => {
+      bgColor.g = e.target.value;
+      updateCanvasBackground();
+      fillCanvasWithBackground();
+    });
+
+    document.getElementById('blueSlider').addEventListener('input', (e) => {
+      bgColor.b = e.target.value;
+      updateCanvasBackground();
+      fillCanvasWithBackground();
+    });
+
+    // Save the current game state to localStorage
+    function saveState() {
+      const gameState = {
+        particles: particles.map(p => ({ x: p.x, y: p.y, color: p.color })),
+        barriers,
+        accelerators,
+        bgColor
+      };
+      localStorage.setItem('gameState', JSON.stringify(gameState));
+      alert('Game state saved!');
+    }
+
+    // Load the saved game state from localStorage
+    function loadState() {
+      const savedState = localStorage.getItem('gameState');
+      if (savedState) {
+        const { particles: savedParticles, barriers: savedBarriers, accelerators: savedAccelerators, bgColor: savedBgColor } = JSON.parse(savedState);
+        particles = savedParticles.map(p => new Particle(p.x, p.y, p.color));
+        barriers = savedBarriers;
+        accelerators = savedAccelerators;
+        bgColor = savedBgColor;
+        updateCanvasBackground();
+        alert('Game state loaded!');
+      } else {
+        alert('No saved state found!');
+      }
+    }
+
+    // Event listeners for save/load buttons
+    document.getElementById('saveState').addEventListener('click', saveState);
+    document.getElementById('loadState').addEventListener('click', loadState);
+
+    // Particle class
     class Particle {
       constructor(x, y, color) {
         this.x = x;
         this.y = y;
         this.color = color;
-        this.size = 6;
         this.vx = (Math.random() - 0.5) * 4;
         this.vy = (Math.random() - 0.5) * 4;
+        this.size = 6;
+        this.frozen = false;
+        this.accelerated = false;
+        this.normalSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        this.accelerationFactor = 5.00;
+        this.decelerationFactor = 0.02;
       }
 
       update() {
+        if (this.frozen || isFrozen) return;
+
+        // Handle particle movement
         this.x += this.vx;
         this.y += this.vy;
+
+        // Apply attraction or repulsion force
+        if (currentTool === 'attract' || currentTool === 'repel') {
+          const dx = mouseX - this.x;
+          const dy = mouseY - this.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const maxForce = 2; // Maximum force that can be applied
+          let force = maxForce / distance;
+
+          if (currentTool === 'repel') {
+            force = -force;
+          }
+
+          const angle = Math.atan2(dy, dx);
+          this.vx += Math.cos(angle) * force;
+          this.vy += Math.sin(angle) * force;
+        }
+
+        // Collision with barriers
+        this.checkBarrierCollision();
+
+        // Wall bounce logic
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
 
         // Handle particle collisions
         for (let i = 0; i < particles.length; i++) {
           const p2 = particles[i];
           if (p2 !== this && this.collidesWith(p2)) {
-            if (isChemistryMode) {
-              this.reactWith(p2);
-            }
+            this.handleCollision(p2);
           }
         }
 
-        // Wall bounce logic
-        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        // Update the fastest speed
+        const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        if (currentSpeed > fastestSpeed) {
+          fastestSpeed = currentSpeed;
+          document.getElementById('fastestSpeed').innerText = fastestSpeed.toFixed(2);
+        }
+
+        // Particle Accelerator logic
+        accelerators.forEach(accelerator => {
+          const dx = this.x - accelerator.x;
+          const dy = this.y - accelerator.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          // Only accelerate if the particle is within a certain distance (e.g., 100px)
+          if (distance < 100 && !this.accelerated) {
+            const dotProduct = (this.vx * dx + this.vy * dy);
+            if (dotProduct < 0) {  // Check if the particle is moving towards the accelerator
+              this.accelerated = true;
+              const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+              this.vx += Math.cos(Math.atan2(this.vy, this.vx)) * this.accelerationFactor * speed;
+              this.vy += Math.sin(Math.atan2(this.vy, this.vx)) * this.accelerationFactor * speed;
+            }
+          }
+
+          // Deceleration if the particle has been accelerated
+          if (this.accelerated) {
+            const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+            const speedDiff = currentSpeed - this.normalSpeed;
+            if (Math.abs(speedDiff) > 0.01) {
+              const decay = speedDiff * this.decelerationFactor;
+              this.vx -= decay * Math.cos(Math.atan2(this.vy, this.vx));
+              this.vy -= decay * Math.sin(Math.atan2(this.vy, this.vx));
+            } else {
+              this.accelerated = false; // Stop accelerating once it returns to normal speed
+            }
+          }
+        });
       }
 
       collidesWith(other) {
         const dx = this.x - other.x;
         const dy = this.y - other.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        return distance < this.size * 2;
+        return distance < this.size + other.size;
       }
 
-      reactWith(other) {
-        const reactionKey = [this.color, other.color].sort().join('-');
-        const newColor = reactions[reactionKey];
+      handleCollision(other) {
+        // If same color, particles just move over each other (no bounce)
+        if (this.color === other.color) {
+          // Do nothing, particles just pass through each other
+        } else {
+          // If different color, mix the colors
+          const colorKey = this.color + '-' + other.color;
+          const reverseKey = other.color + '-' + this.color;
+          let newColor = colorMixingRules[colorKey] || colorMixingRules[reverseKey] || 'gray';
 
-        if (newColor) {
-          // Create new particle with the resulting color
-          particles.push(new Particle(this.x, this.y, newColor));
+          // Remove the collided particles and create a new particle
+          particles = particles.filter(p => p !== this && p !== other);
+          const newParticle = new Particle((this.x + other.x) / 2, (this.y + other.y) / 2, newColor);
+          particles.push(newParticle);
         }
-
-        // Remove particles after reaction
-        particles = particles.filter(p => p !== this && p !== other);
       }
 
       draw() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = this.frozen || isFrozen ? 'lightblue' : this.color;
         ctx.fill();
-        ctx.closePath();
+      }
 
-        if (isChemistryMode) {
-          ctx.font = '16px Arial';
-          ctx.fillStyle = 'white';
-          ctx.fillText(this.color.charAt(0).toUpperCase() + this.color.slice(1), this.x - this.size, this.y - this.size - 10);
+      checkBarrierCollision() {
+        for (let i = 0; i < barriers.length - 1; i++) {
+          const p1 = barriers[i];
+          const p2 = barriers[i + 1];
+          if (this.lineIntersectsCircle(p1, p2, this.x, this.y, this.size)) {
+            const normal = { x: p2.y - p1.y, y: p1.x - p2.x };
+            const length = Math.sqrt(normal.x * normal.x + normal.y * normal.y);
+            normal.x /= length;
+            normal.y /= length;
+
+            const dot = this.vx * normal.x + this.vy * normal.y;
+            this.vx -= 2 * dot * normal.x;
+            this.vy -= 2 * dot * normal.y;
+          }
         }
       }
-    }
 
-    // Random particle spawning function
-    function randomParticleSpawner() {
-      if (!isChemistryMode && isRandomSpawningEnabled) {
-        const colors = ['red', 'blue', 'yellow'];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
-        particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, randomColor));
+      lineIntersectsCircle(p1, p2, cx, cy, radius) {
+        const a = p2.x - p1.x;
+        const b = p2.y - p1.y;
+        const c = p1.x - cx;
+        const d = p1.y - cy;
+
+        const dot = a * c + b * d;
+        const lengthSq = a * a + b * b;
+        const param = Math.min(Math.max(-dot / lengthSq, 0), 1);
+
+        const closestX = p1.x + param * a;
+        const closestY = p1.y + param * b;
+
+        const distX = closestX - cx;
+        const distY = closestY - cy;
+        return distX * distX + distY * distY <= radius * radius;
       }
     }
 
-    // Event listeners for tool actions
-    document.querySelector('[data-tool="red"]').addEventListener('click', () => {
-      particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, 'red'));
+    function eraseNearbyBarriers(x, y, radius = 20) {
+      barriers = barriers.filter(point => {
+        const dx = point.x - x;
+        const dy = point.y - y;
+        return Math.sqrt(dx * dx + dy * dy) > radius;
+      });
+    }
+
+    function drawAccelerators() {
+      accelerators.forEach(accelerator => {
+        ctx.beginPath();
+        ctx.arc(accelerator.x, accelerator.y, 20, 0, Math.PI * 2);
+        ctx.fillStyle = 'cyan';
+        ctx.fill();
+      });
+    }
+
+    function clearParticles() {
+      particles = [];
+      document.getElementById('particleCount').innerText = particles.length;
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      isDrawing = true;
+
+      if (currentTool === 'freeze') {
+        isFrozen = !isFrozen;  // Toggle freeze state
+      } else if (currentTool === 'erase') {
+        eraseNearbyBarriers(mouseX, mouseY);
+      } else if (currentTool === 'accelerator') {
+        accelerators.push({ x: mouseX, y: mouseY });
+      } else if (currentTool === 'red') {
+        particles.push(new Particle(mouseX, mouseY, 'red'));
+      } else if (currentTool === 'blue') {
+        particles.push(new Particle(mouseX, mouseY, 'blue'));
+      } else if (currentTool === 'yellow') {
+        particles.push(new Particle(mouseX, mouseY, 'yellow'));
+      } else if (currentTool === 'draw') {
+        barriers.push({ x: mouseX, y: mouseY });
+      } else if (currentTool === 'clear') {
+        clearParticles();
+      }
     });
 
-    document.querySelector('[data-tool="blue"]').addEventListener('click', () => {
-      particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, 'blue'));
+    canvas.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+
+      if (isDrawing && currentTool === 'draw') {
+        barriers.push({ x: mouseX, y: mouseY });
+      } else if (isDrawing && currentTool === 'erase') {
+        eraseNearbyBarriers(mouseX, mouseY);
+      }
     });
 
-    document.querySelector('[data-tool="yellow"]').addEventListener('click', () => {
-      particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, 'yellow'));
+    canvas.addEventListener('mouseup', () => {
+      isDrawing = false;
     });
 
-    // Animation loop
+    function drawBarriers() {
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      barriers.forEach((point, i) => {
+        if (i === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.stroke();
+    }
+
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => p.update());
-      particles.forEach(p => p.draw());
+      drawBarriers();
+      drawAccelerators();
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      document.getElementById('particleCount').innerText = particles.length;
       requestAnimationFrame(animate);
     }
 
-    // Run the random spawning function periodically in non-Chemistry Mode
-    setInterval(randomParticleSpawner, 1000);
-
+    // Initial particles and game loop
     animate();
+
+    // Tool selection
+    document.querySelectorAll('.tool').forEach(tool => {
+      tool.addEventListener('click', () => {
+        document.querySelector('.tool.active')?.classList.remove('active');
+        tool.classList.add('active');
+        currentTool = tool.getAttribute('data-tool');
+      });
+    });
+    
+    // Variable to control random particle spawn
+    let isRandomSpawnEnabled = false;
+    
+    // Function to spawn a random particle
+    function spawnRandomParticle() {
+      const colors = ['red', 'blue', 'yellow'];
+      const color =colors [Math.floor(Math.random() * colors.length)];
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      particles.push(new Particle(x, y, color));
+    }
+
+    // Interval to spawn paritcles randomly
+    let randomSpawnInterval;
+    function toggleRandomSpawn() {
+      if (isRandomSpawnEnabled) {
+        randomSpawnInterval = setInterval(spawnRandomParticle, 3000);
+      } else {
+        clearInterval(randomSpawnInterval);
+      }
+    }
+
+    // Add event listener for new button
+    document.querySelector('[data-tool="randomSpawn"]').addEventListener('click', () => {
+      isRandomSpawnEnabled = !isRandomSpawnEnabled;
+      document.querySelector('.tool.active')?.classList.remove('active');
+      document.querySelector('[data-tool="randomSpawn"]').classList.add('active');
+      toggleRandomSpawn();
+    });
   </script>
 </body>
 </html>
