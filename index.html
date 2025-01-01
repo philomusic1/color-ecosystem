@@ -215,6 +215,12 @@
         <i>📂 Load</i>
       </div>
     </div>
+
+    <!-- Temperature Control Panel -->
+    <div class="temperature-controls">
+      <label for="temperatureSlider">Temperature: <span id="temperatureValue">20°C</span></label>
+      <input type="range" id="temperatureSlider" min="-50" max="100" value="20">
+    </div>
   </div>
 
   <!-- Game Stats -->
@@ -252,6 +258,21 @@
     let isFrozen = false;
     let fastestSpeed = 0;
     let bgColor = { r: 0, g: 0, b: 0 };
+
+    // Temperature variable (in Celsius)
+    let temperature = 20; // Default temperature (in Celsius)
+
+    // Temperature effect constants
+    const minTemperature = -50; // Minimum temperature (Celsius)
+    const maxTemperature = 100; // Maximum temperature (Celsius)
+    const temperatureThresholdHigh = 80; // Temperature at which particles explode
+    const temperatureThresholdLow = -10; // Temperature at which particles freeze
+
+    // Display temperature
+    document.getElementById('temperatureSlider').addEventListener('input', (e) => {
+      temperature = e.target.value;
+      document.getElementById('temperatureValue').textContent = `${temperature}°C`;
+    });
 
     // Show the modal on page load
     window.onload = () => {
@@ -356,6 +377,53 @@
         this.decelerationFactor = 0.02;
       }
 
+      // Calculate temperature effect
+      calculateTemperatureEffect() {
+        let speedMultiplier = 1;
+
+        // Handle high temperature (slow down particles)
+        if (temperature > 30) {
+          // Slow down by reducing velocity proportionally to how high the temperature is above 20°C
+          const temperatureFactor = (temperature - 20) * 0.02; // Modify factor as needed for desired effect
+          speedMultiplier = 1 - temperatureFactor;  // Reduce speed as temperature increases
+          if (speedMultiplier < 0) speedMultiplier = 0; // Don't allow negative velocity
+        } 
+        // Handle explosion effect when temperature is too high
+        else if (temperature > temperatureThresholdHigh) {
+          this.explode();
+        } 
+        // Handle freezing effect when temperature is too low
+        else if (temperature < temperatureThresholdLow) {
+          this.freeze();
+          speedMultiplier = 0.2; // Slow down particles in low temperature
+        } else {
+          // Normal speed multiplier if temperature is between thresholds
+          speedMultiplier = 1 + (temperature - 20) * 0.05;
+        }
+
+        return { speedMultiplier };
+      }
+
+      // Handle explosion when temperature is too high
+      explode() {
+        if (this.exploded) return;
+    
+        this.exploded = true;
+        for (let i = 0; i < 10; i++) {
+          const newParticle = new Particle(this.x, this.y, this.color);
+          newParticle.vx = (Math.random() - 0.5) * 10;
+          newParticle.vy = (Math.random() - 0.5) * 10;
+          particles.push(newParticle);
+        }
+      }
+
+      // Handle freezing effect when temperature is too low
+      freeze() {
+        this.size *= 0.5;
+        this.vx = 0;
+        this.vy = 0;
+      }
+
       update() {
         if (this.frozen || isFrozen) return;
 
@@ -369,10 +437,13 @@
           this.x += this.vx / stepSize;
           this.y += this.vy / stepSize;
 
+          const temperatureEffect = this.calculateTemperatureEffect();
+          this.vx *= temperatureEffect.speedMultiplier;
+          this.vy *= temperatureEffect.speedMultiplier;
+
           // Check for barrier collision on each small step
           this.checkBarrierCollision();
         }
-
 
         // Apply attraction or repulsion force
         if (currentTool === 'attract' || currentTool === 'repel') {
